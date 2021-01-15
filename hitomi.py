@@ -147,13 +147,44 @@ def fetch_ids(request_url) -> list:
             ids.append(int.from_bytes(arr[i * 4:(i + 1) * 4], byteorder='big', signed=False))
     return ids
 
+def filter_ids(id_lists) -> list:
+    if len(id_lists) == 0:
+        raise HitomiToolsException("empty id list.")
+    elif len(id_lists) == 1:
+        return id_lists[0]
+    base_lists = id_lists[0]
+    for i in id_lists[1:]:
+        if len(i) < len(base_lists):
+            base_lists = i
+    id_lists.remove(base_lists)
+    for bid in base_lists[:]:
+        for lst in id_lists:
+            dss = len(lst)
+            rng = [0, len(lst) - 1]
+            sep = int((len(lst) - 1) / 2)
+            while dss > 1:
+                dss /= 2
+                if bid > lst[sep]:
+                    rng[1] = sep
+                    sep -= int(dss)
+                elif bid < lst[sep]:
+                    rng[0] = sep
+                    sep += int(dss)
+                else:
+                    break
+            else:
+                if not bid in lst[rng[0]:rng[1]]:
+                    base_lists.remove(bid)
+                    break
+    return base_lists
+
 SEARCH_DOMAIN = "https://ltn.hitomi.la/{}.nozomi"
 def search_category(category: Category, value, language = "all") -> list:
     request_url = SEARCH_DOMAIN.format("{}/{}-{}".format(category.value, value, language))
     return fetch_ids(request_url)
 
 def search_art_type(art_type: ArtType, language = "all") -> list:
-    request_url = SEARCH_DOMAIN.format("type/{}-{}".format(category.value, language))
+    request_url = SEARCH_DOMAIN.format("type/{}-{}".format(art_type.value, language))
     return fetch_ids(request_url)
 
 def search_tag(tag, language = "all") -> list:
@@ -164,47 +195,30 @@ def search_tag(tag, language = "all") -> list:
     return fetch_ids(request_url)
 
 def search_direct(category: Category, category_value, art_type: ArtType, tags, language) -> list:
-    tag_result = search_tag(tags[0], language)
-    for t in tags[1:]:
-        result = search_tag(t, language)
-        tag_result = filter(lambda x: x in t, tag_result)
+    id_lists = []
+    for t in tags:
+        id_lists.append(search_tag(t, language))
 
     if category != None:
         if category_value == None:
             raise HitomiToolsException("empty category value.")
-        category_result = search_category(category, category_value, language);
-        tag_result = filter(lambda x: x in category_result, tag_result)
+        id_lists.append(search_category(category, category_value, language))
 
     if art_type != None:
-        type_result = search_art_type(art_type, language);
-        tag_result = filter(lambda x: x in type_result, tag_result)
+        id_lists.append(search_art_type(art_type, language))
     
-    return tag_result
+    return filter_ids(id_lists)
 
 def search(artist = None, series = None, character = None, art_type: ArtType = None, tags = ["index"], language = "all") -> list:
     if artist == None and series == None and character == None:
         return search_direct(None, None, art_type, tags, language)
-    
-    artist_result = None
-    series_result = None
-    character_result = None
+
+    id_lists = []
     if artist != None:
-        artist_result = search_direct(category = Category.ARTIST, category_value = artist, art_type = art_type, tags = tags, language = language)
+        id_lists.append(search_direct(category = Category.ARTIST, category_value = artist, art_type = art_type, tags = tags, language = language))
     if series != None:
-      series_result = search_direct(category = Category.SERIES, category_value = series, art_type = art_type, tags = tags, language = language)
+        id_lists.append(search_direct(category = Category.SERIES, category_value = series, art_type = art_type, tags = tags, language = language))
     if character != None:
-        character_result = search_direct(category = Category.CHARACTER, category_value = character, art_type = art_type, tags = tags, language = language)
-    
-    if artist_result != None:
-        if series_result != None:
-            artist_result = filter(lambda x: x in series_result, artist_result)
-        if character_result != None:
-            artist_result = filter(lambda x: x in character_result, artist_result)
-        return artist_result
+        id_lists.append(search_direct(category = Category.CHARACTER, category_value = character, art_type = art_type, tags = tags, language = language))
 
-    if series_result != None:
-        if character_result != None:
-            series_result = filter(lambda x: x in character_result, series_result)
-        return series_result
-
-    return character_result
+    return filter_ids(id_lists)
