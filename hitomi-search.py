@@ -24,7 +24,7 @@ def main():
         if not args.quiet:
             print("no items found.")
     else:
-        print(", ".join(str(i) for i in list(result)))
+        print(" ".join(str(i) for i in list(result)))
     return
 
 main()
