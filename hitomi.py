@@ -118,9 +118,8 @@ class Image():
 
         download_path = parent_dir + "/" + self.name
         with urllib.request.urlopen(request) as res:
-            pass
-            #with open(download_path, "wb") as img_file:
-            #    img_file.write(res.read())
+            with open(download_path, "wb") as img_file:
+                img_file.write(res.read())
         return download_path
 
 def create_request(url):
