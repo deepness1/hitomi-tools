@@ -20,8 +20,6 @@ def main():
     args = parse_args()
     if args.galleryids != None:
         input_ids += args.galleryids
-    print(input_ids)
-    return;
     for g in input_ids:
         g = g.replace(',', '')
         g = g.replace(' ', '')
