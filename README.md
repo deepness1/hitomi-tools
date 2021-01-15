@@ -21,5 +21,5 @@ python hitomi-download.py 1825469 1825467
 ```
 Download all english doujinshi to "dl" folder:
 ```
-python hitomi-search.py -w doujinshi -l english | python hitomi-download.py -o dl
+python hitomi-search.py -w doujinshi -l english | python hitomi-download.py -s dl
 ```
