@@ -21,8 +21,6 @@ def main():
     if args.galleryids != None:
         input_ids += args.galleryids
     for g in input_ids:
-        g = g.replace(',', '')
-        g = g.replace(' ', '')
         hitomi.Gallery(g).download(args.savedir, args.threads)
     return
 
