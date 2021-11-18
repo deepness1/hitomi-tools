@@ -1,3 +1,4 @@
+**This project is OBSOLETED by [hitomi-browser](https://github.com/deepness1/hitomi-browser)**
 # hitomi-tools
 hitomi-tools is a small utilities writen in Python3.  
 Can be used to search and scrape the works of hitomi.la.
